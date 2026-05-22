@@ -1,0 +1,141 @@
+index.html
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href__="https://base44.com/logo_v2.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="manifest" href__="/manifest.json" />
+    <title>Base44 APP</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+src/main.jsx
+
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import App from '@/App.jsx'
+import '@/index.css'
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <App />
+)
+src/index.css
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'Inter', sans-serif;
+    --background: 35 30% 97%;
+    --foreground: 220 30% 15%;
+    --card: 35 25% 99%;
+    --card-foreground: 220 30% 15%;
+    --popover: 35 25% 99%;
+    --popover-foreground: 220 30% 15%;
+    --primary: 220 25% 20%;
+    --primary-foreground: 35 30% 97%;
+    --secondary: 35 20% 93%;
+    --secondary-foreground: 220 25% 20%;
+    --muted: 35 15% 93%;
+    --muted-foreground: 220 10% 45%;
+    --accent: 43 74% 49%;
+    --accent-foreground: 220 25% 12%;
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 35 15% 88%;
+    --input: 35 15% 88%;
+    --ring: 43 74% 49%;
+    --radius: 0.75rem;
+  }
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 35 20% 92%;
+    --card: 220 22% 11%;
+    --card-foreground: 35 20% 92%;
+    --primary: 35 20% 92%;
+    --primary-foreground: 220 25% 8%;
+    --secondary: 220 18% 16%;
+    --secondary-foreground: 35 20% 92%;
+    --muted: 220 18% 16%;
+    --muted-foreground: 35 10% 55%;
+    --accent: 43 70% 44%;
+    --accent-foreground: 220 25% 8%;
+    --destructive: 0 50% 40%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 43 70% 44%;
+  }
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+}
+src/App.jsx
+
+import { Toaster } from "@/components/ui/toaster"
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClientInstance } from '@/lib/query-client'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import PageNotFound from './lib/PageNotFound';
+import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import AppLayout from './components/layout/AppLayout';
+import Home from './pages/Home';
+import BrowseTributes from './pages/BrowseTributes';
+import CreateTribute from './pages/CreateTribute';
+import ViewTribute from './pages/ViewTribute';
+import Settings from './pages/Settings';
+
+const AuthenticatedApp = () => {
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  if (isLoadingPublicSettings || isLoadingAuth) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  if (authError) {
+    if (authError.type === 'user_not_registered') return <UserNotRegisteredError />;
+    else if (authError.type === 'auth_required') { navigateToLogin(); return null; }
+  }
+  return (
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/tributes" element={<BrowseTributes />} />
+        <Route path="/create" element={<CreateTribute />} />
+        <Route path="/tribute/:id" element={<ViewTribute />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="*" element={<PageNotFound />} />
+      </Route>
+    </Routes>
+  );
+};
+
+function App() {
+  return (
+    <AuthProvider>
+      <QueryClientProvider client={queryClientInstance}>
+        <Router>
+          <AuthenticatedApp />
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
+    </AuthProvider>
+  )
+}
+export default App
+tailwind.config.js — (already in your context above, copy as-is)
